@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<name>Local libs</name>
+
+	<description>run maven install to install these local libraries to your maven local</description>
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.shawnyang.poc.bt</groupId>
+	<artifactId>poc-bt-lib</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<java.version>1.7</java.version>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-install-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>bluecove-2.1.1-RASPBERRYPI3</id>
+						<phase>test</phase>
+						<goals>
+							<goal>install-file</goal>
+						</goals>
+						<configuration>
+							<groupId>net.sf.bluecove</groupId>
+							<artifactId>bluecove</artifactId>
+							<version>2.1.1-RASPBERRYPI3</version>
+							<packaging>jar</packaging>
+							<file>${project.basedir}/lib/bluecove/bluecove/2.1.1-RASPBERRYPI3/bluecove.jar</file>
+							<createChecksum>true</createChecksum>
+							<generatePom>true</generatePom>
+						</configuration>
+					</execution>
+					<execution>
+						<id>bluecove-gpl</id>
+						<phase>test</phase>
+						<goals>
+							<goal>install-file</goal>
+						</goals>
+						<configuration>
+							<groupId>net.sf.bluecove</groupId>
+							<artifactId>bluecove-gpl</artifactId>
+							<version>2.1.1-RASPBERRYPI3</version>
+							<packaging>jar</packaging>
+							<file>${project.basedir}/lib/bluecove/bluecove-gpl/2.1.1-RASPBERRYPI3/bluecove-gpl.jar</file>
+							<createChecksum>true</createChecksum>
+							<generatePom>true</generatePom>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
