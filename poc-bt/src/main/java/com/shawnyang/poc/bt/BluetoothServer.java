@@ -15,30 +15,42 @@ import javax.microedition.io.Connector;
 import javax.microedition.io.StreamConnection;
 import javax.microedition.io.StreamConnectionNotifier;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 @Component
 public class BluetoothServer {
 
 	private static final Logger log = LoggerFactory.getLogger(BluetoothServer.class);
-	// Define the server connection URL
-	private static final UUID MYSERVICEUUID_UUID = new UUID("e67eff96668c4f69a89b5b53e9336921", false);
-	private static final String CONNECTION_URL = "btspp://localhost:" + MYSERVICEUUID_UUID.toString()
-			+ ";name=POC_BT_SERVICE_NAME;authenticate=false;encrypt=false";
+
+	@Autowired
+	private BluetoothServerProperties bluetoothServerProperties;
 
 	private StreamConnectionNotifier connection;
+	private final Gson gson = new Gson();
 
 	@PostConstruct
 	public void init() throws IOException {
 		LocalDevice localDevice = LocalDevice.getLocalDevice();
 		localDevice.setDiscoverable(DiscoveryAgent.GIAC);
-		log.info("My bluetooth address: " + localDevice.getBluetoothAddress());
-		log.info("My friendly name: " + localDevice.getFriendlyName());
+		log.info("Local device bluetooth address: " + localDevice.getBluetoothAddress());
+		log.info("Local device friendly name: " + localDevice.getFriendlyName());
+
 		// Create a server connection (a notifier)
-		connection = (StreamConnectionNotifier) Connector.open(CONNECTION_URL);
+		UUID uuid = new UUID(bluetoothServerProperties.getUuid(), false);
+		String name = bluetoothServerProperties.getName();
+		String connection_url = "btspp://localhost:" + uuid.toString() + ";name=" + name
+				+ ";authenticate=false;encrypt=false";
+		connection = (StreamConnectionNotifier) Connector.open(connection_url);
 	}
 
 	@Async
@@ -52,38 +64,8 @@ public class BluetoothServer {
 				log.info("Remote device bluetooth address: " + remoteDevice.getBluetoothAddress());
 				log.info("Remote device friendly name: " + remoteDevice.getFriendlyName(true));
 
-				BufferedReader br = new BufferedReader(new InputStreamReader(streamConnection.openInputStream()));
-				DataOutputStream outStream = streamConnection.openDataOutputStream();
+				process(streamConnection);
 
-				while (true) {
-
-					boolean exit = false;
-					StringBuilder input = new StringBuilder();
-					String lineRead;
-					while ((lineRead = br.readLine()) != null) {
-						if ("$send".equals(lineRead)) {
-							break;
-						} else if ("$exit".equals(lineRead)) {
-							exit = true;
-							break;
-						}
-						input.append(lineRead).append("\n");
-					}
-					log.info(input.toString());
-
-					// send response to spp client
-					String response = "Hello, got your message: " + input.toString();
-					log.info(response);
-					outStream.writeUTF(response + "\n");
-
-					if (exit) {
-						String bye = "Bye.";
-						log.info(bye);
-						outStream.writeUTF(bye + "\n");
-						break;
-					}
-
-				}
 			} catch (IOException e) {
 				log.error(e.getMessage(), e);
 			} finally {
@@ -96,6 +78,92 @@ public class BluetoothServer {
 				}
 			}
 		}
+	}
+
+	private void process(StreamConnection streamConnection) throws IOException {
+		BufferedReader br = new BufferedReader(new InputStreamReader(streamConnection.openInputStream()));
+		DataOutputStream os = streamConnection.openDataOutputStream();
+
+		while (true) {
+			HttpMethod httpMethod = null;
+			String resource = null;
+			String requestMessage;
+
+			String inputLine;
+			boolean isReadingMessage = false;
+			StringBuilder messageBuffer = new StringBuilder();
+			while ((inputLine = br.readLine()) != null) {
+				log.debug("inputLine=" + inputLine);
+				if (isReadingMessage) {
+					if (StringUtils.isEmpty(inputLine)) {// empty means done
+						log.debug("comment=message read complete");
+						break;
+					} else {
+						messageBuffer.append(inputLine);
+					}
+				} //
+				else {// not reading messages means waiting for request
+					String[] request = StringUtils.split(inputLine);
+					if (request.length != 2) {
+						log.debug("comment=Not a request line.");
+						continue;
+					}
+					httpMethod = HttpMethod.resolve(request[0]);
+					if (httpMethod == null) {
+						log.debug("comment=Unknown http method: " + request[0]);
+						continue;
+					}
+					String requestLine = inputLine;
+					log.info("requestLine=" + requestLine);
+					resource = request[1];
+					isReadingMessage = true;
+					log.debug("comment=message read start");
+				}
+			}
+			requestMessage = messageBuffer.toString();
+			log.info("requestMessage=" + requestMessage);
+
+			HttpStatus status = HttpStatus.OK;
+			String responseMessage = "";
+			if ("/bootInfo".equals(resource)) {
+				if (HttpMethod.PUT == httpMethod) {
+					try {
+						BootInfoRequest request = gson.fromJson(requestMessage, BootInfoRequest.class);
+						BootInfoResponse response = bootInfo(request);
+						responseMessage = gson.toJson(response);
+					} catch (JsonSyntaxException e) {
+						status = HttpStatus.BAD_REQUEST;
+						responseMessage = e.toString() + "\n" + e.getMessage();
+					} catch (Exception e) {
+						status = HttpStatus.INTERNAL_SERVER_ERROR;
+						responseMessage = e.toString() + "\n" + e.getMessage();
+					}
+				} else {
+					status = HttpStatus.METHOD_NOT_ALLOWED;
+				}
+			} else {
+				status = HttpStatus.NOT_FOUND;
+			}
+
+			String statusLine = status.value() + " " + status.getReasonPhrase();
+			log.info("statusLine=" + statusLine);
+			log.info("responseMessage=" + responseMessage);
+
+			// send response to spp client
+			os.writeUTF(statusLine + "\n");
+			if (StringUtils.isNotEmpty(responseMessage)) {
+				os.writeUTF(responseMessage + "\n");
+			}
+			os.writeUTF("\n");// empty line means done.
+		}
+	}
+
+	private BootInfoResponse bootInfo(BootInfoRequest request) throws Exception {
+		// do something
+		BootInfoResponse response = new BootInfoResponse();
+		response.setErrorMessage("Not implemented yet");
+		response.getErrorDeviceIds().addAll(request.getDeviceIds());
+		return response;
 	}
 
 	@PreDestroy
