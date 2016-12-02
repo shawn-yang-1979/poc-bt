@@ -1,9 +1,10 @@
 package com.shawnyang.poc.bt;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -19,6 +20,8 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
@@ -36,7 +39,9 @@ public class BluetoothServer {
 	private BluetoothServerProperties bluetoothServerProperties;
 
 	private StreamConnectionNotifier connection;
-	private final Gson gson = new Gson();
+
+	@Autowired
+	private Gson gson;
 
 	@PostConstruct
 	public void init() throws IOException {
@@ -53,12 +58,14 @@ public class BluetoothServer {
 		connection = (StreamConnectionNotifier) Connector.open(connection_url);
 	}
 
+	@EventListener(ContextRefreshedEvent.class)
 	@Async
 	public void listen() {
 		while (true) {
 			StreamConnection streamConnection = null;
 			try {
 				// Accept a new client connection
+				log.info("Waiting for remote device.");
 				streamConnection = connection.acceptAndOpen();
 				RemoteDevice remoteDevice = RemoteDevice.getRemoteDevice(streamConnection);
 				log.info("Remote device bluetooth address: " + remoteDevice.getBluetoothAddress());
@@ -82,7 +89,7 @@ public class BluetoothServer {
 
 	private void process(StreamConnection streamConnection) throws IOException {
 		BufferedReader br = new BufferedReader(new InputStreamReader(streamConnection.openInputStream()));
-		DataOutputStream os = streamConnection.openDataOutputStream();
+		BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(streamConnection.openOutputStream()));
 
 		while (true) {
 			HttpMethod httpMethod = null;
@@ -150,11 +157,17 @@ public class BluetoothServer {
 			log.info("responseMessage=" + responseMessage);
 
 			// send response to spp client
-			os.writeUTF(statusLine + "\n");
+			// os.writeUTF(statusLine + "\n");
+			// if (StringUtils.isNotEmpty(responseMessage)) {
+			// os.writeUTF(responseMessage + "\n");
+			// }
+			// os.writeUTF("\n");// empty line means done.
+			bw.write(statusLine + "\n");
 			if (StringUtils.isNotEmpty(responseMessage)) {
-				os.writeUTF(responseMessage + "\n");
+				bw.write(responseMessage + "\n");
 			}
-			os.writeUTF("\n");// empty line means done.
+			bw.write("\n");// empty line means done.
+			bw.flush();
 		}
 	}
 
