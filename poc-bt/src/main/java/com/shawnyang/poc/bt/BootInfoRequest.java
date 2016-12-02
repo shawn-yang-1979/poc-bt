@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /*
  * PUT /bootInfo
  * {"host":"127.0.0.1","username":"mqtt-admin","password":"mqtt-admin","leafSpaceId":"CellSpace-14","deviceIds":["Placemark-12","Placemark-11"]}
@@ -56,6 +55,17 @@ public class BootInfoRequest implements Serializable {
 
 	public void setDeviceIds(List<String> deviceIds) {
 		this.deviceIds = deviceIds;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("host=").append(host).append(", ");
+		builder.append("username=").append(username).append(", ");
+		builder.append("password=").append(password).append(", ");
+		builder.append("leafSpaceId=").append(leafSpaceId).append(", ");
+		builder.append("deviceIds=").append(deviceIds);
+		return builder.toString();
 	}
 
 }

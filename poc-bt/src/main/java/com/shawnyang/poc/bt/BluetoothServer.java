@@ -158,12 +158,31 @@ public class BluetoothServer {
 		}
 	}
 
+	private boolean dummySuccess = false;
+
 	private BootInfoResponse bootInfo(BootInfoRequest request) throws Exception {
 		// do something
-		BootInfoResponse response = new BootInfoResponse();
-		response.setErrorMessage("Not implemented yet");
-		response.getErrorDeviceIds().addAll(request.getDeviceIds());
-		return response;
+		if (dummySuccess) {
+			BootInfoResponse response = new BootInfoResponse();
+			response.setSuccess(dummySuccess);
+			response.getSuccessDeviceIds().addAll(request.getDeviceIds());
+			dummySuccess = false;
+			return response;
+		} else {
+			BootInfoResponse response = new BootInfoResponse();
+			response.setSuccess(dummySuccess);
+			response.setMessage("Fail to complete the boot.");
+			for (int i = 0; i < request.getDeviceIds().size(); i++) {
+				String deviceId = request.getDeviceIds().get(i);
+				if (i == 0) {
+					response.getSuccessDeviceIds().add(deviceId);
+				} else {
+					response.getErrorDeviceIds().add(deviceId);
+				}
+			}
+			dummySuccess = true;
+			return response;
+		}
 	}
 
 	@PreDestroy
