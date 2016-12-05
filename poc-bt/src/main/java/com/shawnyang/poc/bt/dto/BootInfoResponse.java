@@ -11,35 +11,50 @@ import java.util.List;
  */
 public class BootInfoResponse implements Serializable {
 	private static final long serialVersionUID = 1L;
+	private String id;
 	private boolean success;
 	private String message;
 	private List<String> successDeviceIds = new LinkedList<>();
 	private List<String> errorDeviceIds = new LinkedList<>();
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
 	public boolean isSuccess() {
 		return success;
 	}
+
 	public void setSuccess(boolean success) {
 		this.success = success;
 	}
+
 	public String getMessage() {
 		return message;
 	}
+
 	public void setMessage(String message) {
 		this.message = message;
 	}
+
 	public List<String> getSuccessDeviceIds() {
 		return successDeviceIds;
 	}
+
 	public void setSuccessDeviceIds(List<String> successDeviceIds) {
 		this.successDeviceIds = successDeviceIds;
 	}
+
 	public List<String> getErrorDeviceIds() {
 		return errorDeviceIds;
 	}
+
 	public void setErrorDeviceIds(List<String> errorDeviceIds) {
 		this.errorDeviceIds = errorDeviceIds;
 	}
-	
-
 
 }

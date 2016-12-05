@@ -6,6 +6,8 @@ public class Device implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private String id;
 	private Type type;
+	private String name;
+	private String controlPointId;
 
 	public String getId() {
 		return id;
@@ -21,6 +23,22 @@ public class Device implements Serializable {
 
 	public void setType(Type type) {
 		this.type = type;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getControlPointId() {
+		return controlPointId;
+	}
+
+	public void setControlPointId(String controlPointId) {
+		this.controlPointId = controlPointId;
 	}
 
 	@Override
