@@ -29,6 +29,9 @@ import org.springframework.stereotype.Component;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.shawnyang.poc.bt.dto.BootInfoRequest;
+import com.shawnyang.poc.bt.dto.BootInfoResponse;
+import com.shawnyang.poc.bt.dto.Device;
 
 @Component
 public class BluetoothServer {
@@ -178,19 +181,21 @@ public class BluetoothServer {
 		if (dummySuccess) {
 			BootInfoResponse response = new BootInfoResponse();
 			response.setSuccess(dummySuccess);
-			response.getSuccessDeviceIds().addAll(request.getDeviceIds());
+			for (Device device : request.getDevices()) {
+				response.getSuccessDeviceIds().add(device.getId());
+			}
 			dummySuccess = false;
 			return response;
 		} else {
 			BootInfoResponse response = new BootInfoResponse();
 			response.setSuccess(dummySuccess);
 			response.setMessage("Fail to complete the boot.");
-			for (int i = 0; i < request.getDeviceIds().size(); i++) {
-				String deviceId = request.getDeviceIds().get(i);
+			for (int i = 0; i < request.getDevices().size(); i++) {
+				Device device = request.getDevices().get(i);
 				if (i == 0) {
-					response.getSuccessDeviceIds().add(deviceId);
+					response.getErrorDeviceIds().add(device.getId());
 				} else {
-					response.getErrorDeviceIds().add(deviceId);
+					response.getSuccessDeviceIds().add(device.getId());
 				}
 			}
 			dummySuccess = true;

@@ -1,4 +1,4 @@
-package com.shawnyang.poc.bt;
+package com.shawnyang.poc.bt.dto;
 
 import java.io.Serializable;
 import java.util.LinkedList;

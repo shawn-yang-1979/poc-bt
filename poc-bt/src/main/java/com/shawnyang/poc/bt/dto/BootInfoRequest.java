@@ -1,4 +1,4 @@
-package com.shawnyang.poc.bt;
+package com.shawnyang.poc.bt.dto;
 
 import java.io.Serializable;
 import java.util.LinkedList;
@@ -15,7 +15,7 @@ public class BootInfoRequest implements Serializable {
 	private String username;
 	private String password;
 	private String leafSpaceId;
-	private List<String> deviceIds = new LinkedList<>();
+	private List<Device> devices = new LinkedList<>();
 
 	public String getHost() {
 		return host;
@@ -49,12 +49,12 @@ public class BootInfoRequest implements Serializable {
 		this.leafSpaceId = leafSpaceId;
 	}
 
-	public List<String> getDeviceIds() {
-		return deviceIds;
+	public List<Device> getDevices() {
+		return devices;
 	}
 
-	public void setDeviceIds(List<String> deviceIds) {
-		this.deviceIds = deviceIds;
+	public void setDevices(List<Device> devices) {
+		this.devices = devices;
 	}
 
 	@Override
@@ -64,7 +64,7 @@ public class BootInfoRequest implements Serializable {
 		builder.append("username=").append(username).append(", ");
 		builder.append("password=").append(password).append(", ");
 		builder.append("leafSpaceId=").append(leafSpaceId).append(", ");
-		builder.append("deviceIds=").append(deviceIds);
+		builder.append("devices=").append(devices);
 		return builder.toString();
 	}
 
