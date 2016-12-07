@@ -1,0 +1,5 @@
+package com.shawnyang.poc.bt.boot.dto;
+
+public enum Type {
+	SOLUTION, BUILDING, FLOOR, ROOM, DOOR, DEVICE_ZIGBEE, DEVICE_RFID_READER, DEVICE_CAMERA, DEVICE_ELEVATOR_SENSOR
+}
